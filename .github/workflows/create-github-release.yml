@@ -2,7 +2,7 @@ name: create-github-release
 on:
   workflow_call:
     secrets:
-      SVC_CLI_BOT_GITHUB_TOKEN:
+      PERSONAL_ACCESS_TOKEN:
         description: a github PAT with repo access
 
     inputs:
@@ -24,9 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - uses: salesforcecli/github-workflows/.github/actions/getPreReleaseTag@main
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/getPreReleaseTag@main
         id: distTag
 
       - name: Validate prerelease
@@ -55,7 +55,7 @@ jobs:
 
       - name: Generate oclif readme
         if: ${{ inputs.generate-readme }}
-        uses: salesforcecli/github-workflows/.github/actions/generateOclifReadme@main
+        uses: ClayChipps/sf-chipps-github-workflows/.github/actions/generateOclifReadme@main
         with:
           skip-on-empty: ${{ inputs.skip-on-empty }}
           pre-release: ${{ steps.prereleaseTag.outputs.tag && 'true' || 'false' }}
@@ -65,9 +65,9 @@ jobs:
         id: changelog
         uses: TriPSs/conventional-changelog-action@9962c3267b32873dbc552a38a8397194361e1101
         with:
-          git-user-name: svc-cli-bot
-          git-user-email: svc_cli_bot@salesforce.com
-          github-token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          git-user-name: "Clay Chipps"
+          git-user-email: claychipps@gmail.com
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           tag-prefix: ""
           # Setting 'release-count' to 0 will keep ALL releases in the change log file (no pruning)
           release-count: "0"
@@ -86,5 +86,5 @@ jobs:
           commit: ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.clean_changelog }}
           prerelease: ${{ steps.prereleaseTag.outputs.tag && 'true' || 'false' }}
-          token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           skipIfReleaseExists: true

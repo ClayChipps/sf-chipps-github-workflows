@@ -15,8 +15,8 @@ jobs:
         with:
           node-version: lts/*
           cache: yarn
-      - uses: salesforcecli/github-workflows/.github/actions/yarnInstallWithRetries@main
-      - uses: salesforcecli/github-workflows/.github/actions/gitConfig@main
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/gitConfig@main
       - name: build docs
         run: |
           rm -rf docs
