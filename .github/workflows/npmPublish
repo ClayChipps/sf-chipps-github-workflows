@@ -1,0 +1,64 @@
+on:
+  workflow_call:
+    secrets:
+      NPM_TOKEN:
+        description: npm token
+
+    inputs:
+      nodeVersion:
+        description: version of node to use.  It's better to specify latest, lts/* or lts/-1 than to hardode numbers
+        type: string
+        default: lts/*
+        required: false
+      runsOn:
+        description: the runner.  Only needed if you need a non-public runner (ex, for git checkout from IP restricted private repo)
+        default: ubuntu-latest
+        required: false
+        type: string
+      githubTag:
+        description: the github release tag that you want to publish as an npm package
+        required: true
+        type: string
+jobs:
+  check-publish:
+    outputs:
+      published: ${{ steps.is-published.outputs.published }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.githubTag }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+      - name: Is published
+        id: is-published
+        run: |
+          RESPONSE=$(npm view .@${{ inputs.githubTag }} version --json --silent || echo "Not published")
+
+          if [ "$RESPONSE" = "\"${{ inputs.githubTag }}\"" ]; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: echo "published said ${{ steps.is-published.outputs.published }}"
+
+  npm-publish:
+    needs: [check-publish]
+    if: ${{ always() && needs.check-publish.outputs.published == 'false' }}
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.githubTag }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+          cache: yarn
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
+      - run: yarn build
+      - run: yarn publish
+        env:
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
