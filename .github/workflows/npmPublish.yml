@@ -55,8 +55,9 @@ jobs:
           ref: ${{ inputs.githubTag }}
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.nodeVersion }}
+          always-auth: true
           cache: yarn
+          node-version: ${{ inputs.nodeVersion }}
       - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
       - run: yarn build
       - run: yarn publish
