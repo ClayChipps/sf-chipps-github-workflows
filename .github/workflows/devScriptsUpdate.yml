@@ -36,7 +36,9 @@ jobs:
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/gitConfig@main
-
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
