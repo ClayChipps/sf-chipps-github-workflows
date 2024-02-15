@@ -56,11 +56,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           always-auth: true
-          cache: yarn
+          cache: pnpm
           node-version: ${{ inputs.nodeVersion }}
-      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
-      - run: yarn build
-      - run: yarn publish
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/pnpmInstallWithRetries@main
+      - run: pnpm build
+      - run: pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -40,9 +40,9 @@ runs:
       if: ${{ steps.is-oclif-plugin.outputs.bool == 'true' && steps.next-version.outputs.skipped == 'false' }}
       shell: bash
       run: |
-        yarn install
-        yarn tsc
-        yarn oclif readme \
+        pnpm install
+        pnpm tsc
+        pnpm oclif readme \
           --no-aliases \
           --version ${{ steps.next-version.outputs.tag }} \
           --repository-prefix "<%- repo %>/blob/<%- version %>/<%- commandPath %>" \

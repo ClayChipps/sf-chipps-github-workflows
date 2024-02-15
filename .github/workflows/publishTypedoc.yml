@@ -14,8 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: yarn
-      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
+          cache: pnpm
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/pnpmInstallWithRetries@main
       - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/gitConfig@main
       - name: build docs
         run: |
@@ -23,7 +23,7 @@ jobs:
           git worktree prune
           git fetch origin gh-pages:gh-pages
           git worktree add docs gh-pages
-          yarn docs
+          pnpm docs
       - name: send to git
         run: |
           cd docs
