@@ -21,12 +21,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: google/wireit@setup-github-actions-caching/v1
-        continue-on-error: true
+      - uses: pnpm/action-setup@v2
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
           cache: pnpm
+      - uses: google/wireit@setup-github-actions-caching/v1
+        continue-on-error: true
       - name: Cache node modules
         id: cache-nodemodules
         uses: actions/cache@v3
