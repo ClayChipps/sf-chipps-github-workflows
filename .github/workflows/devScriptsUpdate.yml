@@ -36,18 +36,20 @@ jobs:
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/gitConfig@main
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
+
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: pnpm
-      - run: pnpm update sf-chipps-dev-scripts@latest
+          cache: yarn
+      - run: npm install -g yarn-deduplicate
+      - run: yarn upgrade sf-chipps-dev-scripts@latest
       # this may fail because that's how dev-scripts does things
-      - run: pnpm install
+      - run: yarn install  --network-timeout 600000
         continue-on-error: true
-      - run: pnpm install
+
+      - run: yarn install  --network-timeout 600000
+      - run: npx yarn-deduplicate
+      - run: yarn install  --network-timeout 600000
         # clean up any outstanding unmerged devScripts PRs
       - run: |
           PRs=$(gh pr list --search "in:title devScripts update" --json number | jq '.[] | .number' -r | tr -d '[],"')
@@ -59,7 +61,7 @@ jobs:
       # this may fail but we still want a PR with partial fix
       - run: |
           git checkout -b devScripts$(date +%F)
-          pnpm lint -- --fix
+          yarn lint -- --fix
         continue-on-error: true
       - run: |
           git add .

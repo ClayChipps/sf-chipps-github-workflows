@@ -1,0 +1,14 @@
+name: yarn-install-with-retries
+description: "wraps yarn install with retries/timeout to handle network failures"
+inputs:
+  ignore-scripts:
+    type: boolean
+    default: false
+    description: "Skip pre/post install scripts"
+runs:
+  using: composite
+  steps:
+    - name: yarn install
+      uses: ClayChipps/sf-chipps-github-workflows/.github/actions/retry@main
+      with:
+        command: yarn install --network-timeout 600000 ${{ inputs.ignore-scripts && '--ignore-scripts' || '' }}

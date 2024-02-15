@@ -21,15 +21,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
+      - uses: google/wireit@setup-github-actions-caching/v1
+        continue-on-error: true
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
-          cache: pnpm
-      - uses: google/wireit@setup-github-actions-caching/v1
-        continue-on-error: true
+          cache: yarn
       - name: Cache node modules
         id: cache-nodemodules
         uses: actions/cache@v3
@@ -37,14 +34,14 @@ jobs:
           cache-name: cache-node-modules
         with:
           path: "**/node_modules"
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
 
-      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/pnpmInstallWithRetries@main
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
         if: ${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}
-      - run: pnpm build
-      - name: pnpm test
+      - run: yarn build
+      - name: yarn test
         uses: ClayChipps/sf-chipps-github-workflows/.github/actions/retry@main
         with:
-          command: pnpm test
+          command: yarn test
         env:
           SF_DISABLE_TELEMETRY: true

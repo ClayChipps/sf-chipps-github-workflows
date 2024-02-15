@@ -53,17 +53,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.githubTag }}
-      - uses: pnpm/action-setup@v2
-        with:
-          version: latest
       - uses: actions/setup-node@v4
         with:
           always-auth: true
-          cache: pnpm
+          cache: yarn
           node-version: ${{ inputs.nodeVersion }}
-          registry-url: https://registry.npmjs.org/
-      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/pnpmInstallWithRetries@main
-      - run: pnpm build
-      - run: pnpm publish --no-git-checks
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
+      - run: yarn build
+      - run: yarn publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
