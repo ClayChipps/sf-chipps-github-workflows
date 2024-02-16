@@ -1,0 +1,100 @@
+on:
+  workflow_call:
+    secrets:
+      ONEGP_TESTKIT_AUTH_URL:
+        description: "SFDX_AUTH_URL for the 1GP org. Only useful for the 1GP NUTs in packaging"
+        required: false
+      TESTKIT_AUTH_URL:
+        required: false
+      TESTKIT_HUB_USERNAME:
+        required: false
+      TESTKIT_JWT_CLIENT_ID:
+        required: false
+      TESTKIT_JWT_KEY:
+        required: false
+      TESTKIT_HUB_INSTANCE:
+        required: false
+
+    inputs:
+      command:
+        required: false
+        type: string
+        default: yarn test:nuts
+        description: "command to execute (ex: yarn test:nuts)"
+      nodeVersion:
+        required: false
+        description: version of node to run tests against.  Use things like [lts/-1, lts/*, latest] to avoid hardcoding versions
+        type: string
+        default: lts/*
+      os:
+        required: false
+        description: "runs-on property, ex: ubuntu-latest, windows-latest"
+        type: string
+        default: "ubuntu-latest"
+      sfdxExecutablePath:
+        required: false
+        description: "Path to sfdx executable to be used by NUTs, defaults to ''"
+        type: string
+      useCache:
+        required: false
+        type: boolean
+        default: true
+      retries:
+        required: false
+        type: number
+        default: 3
+        description: "Number of times to attempt NUTs"
+
+jobs:
+  nut:
+    name: ${{ inputs.command }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - run: git config --system core.longpaths true
+        if: ${{ runner.os == 'Windows' }}
+
+      - uses: actions/checkout@v4
+      - uses: google/wireit@setup-github-actions-caching/v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+          cache: yarn
+      - name: Cache node modules
+        id: cache-nodemodules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+      - name: add CLI as global dependency
+        uses: ClayChipps/sf-chipps-github-workflows/.github/actions/retry@main
+        with:
+          max_attempts: ${{ inputs.retries }}
+          command: npm install @salesforce/cli@nightly -g
+      - uses: ClayChipps/sf-chipps-github-workflows/.github/actions/yarnInstallWithRetries@main
+        if: ${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}
+      - run: yarn compile
+      - name: Check that oclif config exists
+        id: is-oclif-plugin
+        run: echo "bool=$(jq 'if .oclif then true else false end' package.json)" >> "$GITHUB_OUTPUT"
+      - run: yarn oclif manifest
+        if: ${{ steps.is-oclif-plugin.outputs.bool == 'true' }}
+      - run: echo "TESTKIT_EXECUTABLE_PATH=${{inputs.sfdxExecutablePath}}" >> $GITHUB_ENV
+        if: inputs.sfdxExecutablePath
+      - name: NUTs with ${{ inputs.retries }} attempts
+        uses: ClayChipps/sf-chipps-github-workflows/.github/actions/retry@main
+        with:
+          max_attempts: ${{ inputs.retries }}
+          command: ${{ inputs.command }}
+          retry_on: error
+        env:
+          TESTKIT_AUTH_URL: ${{ secrets.TESTKIT_AUTH_URL}}
+          TESTKIT_HUB_USERNAME: ${{ secrets.TESTKIT_HUB_USERNAME }}
+          TESTKIT_JWT_CLIENT_ID: ${{ secrets.TESTKIT_JWT_CLIENT_ID }}
+          TESTKIT_JWT_KEY: ${{ secrets.TESTKIT_JWT_KEY }}
+          TESTKIT_HUB_INSTANCE: ${{ secrets.TESTKIT_HUB_INSTANCE }}
+          ONEGP_TESTKIT_AUTH_URL: ${{ secrets.ONEGP_TESTKIT_AUTH_URL }}
+          TESTKIT_SETUP_RETRIES: 2
+          SF_DISABLE_TELEMETRY: true
+          DEBUG: ${{ vars.DEBUG }}
